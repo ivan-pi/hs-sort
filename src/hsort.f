@@ -10,7 +10,7 @@ C     'N'    POSITIVE INTEGER GIVING LENGTH OF LIST
 C     'LIST' A LIST OF LENGTH 'N' OF INTEGERS
 C     'KEY'  A LIST OF LENGTH 'N' OF DOUBLE PRECISION KEYS
 C
-C     OUTPUT PARAMETERS
+C     OUTPUT PARAMETERS:
 C
 C     'N'    UNCHANGED
 C     'LIST' A LIST OF OF LENGTH 'N' OF INTEGERS SORTED IN ASCENDING
@@ -26,7 +26,6 @@ C     EFFICIENCY, BUT MAY BE SYSTEM DEPENDENT.
 C
 C     ROUTINE SORTS LISTS UP TO LENGTH 2**MAXSTK
 C***********************************************************************
-
       INTEGER N
       INTEGER LIST(*)
       DOUBLE PRECISION KEY(*)
@@ -34,7 +33,7 @@ C
       INTEGER MAXSTK,NCUT
       PARAMETER(MAXSTK = 32,
      +          NCUT = 12)
-      INTEGER LL, LR, LM NL, NR, LTEMP, STKTOP, I, J, K
+      INTEGER LL, LR, LM, NL, NR, LTEMP, STKTOP, I, J, K
       INTEGER LSTACK(MAXSTK), RSTACK(MAXSTK)
       DOUBLE PRECISION GUESS, VALUE
 C
@@ -48,7 +47,7 @@ C        ONLY USE QUICKSORT ON SUB-LISTS LONGER THAN NCUT
 C
          NL = LL
          NR = LR
-         LM = (LL + LR)/2
+         LM = (LL+LR) / 2
          GUESS = KEY(LIST(LM))
 C
 C        FIND KEYS FOR EXCHANGE
@@ -63,7 +62,7 @@ C
             NR = NR - 1
             GOTO 30
          END IF
-         IF (NL .LT. (NR - 1)) THEN
+         IF (NL .LT. (NR-1)) THEN
             LTEMP = LIST(NL)
             LIST(NL) = LIST(NR)
             LIST(NR) = LTEMP
@@ -86,7 +85,7 @@ C
 C
 C     SELECT SUB-LIST TO BE PROCESSED NEXT
 C
-         STKTOP = STKTOP - 1
+         STKTOP = STKTOP + 1
          IF (NR .LT. LM) THEN
             LSTACK(STKTOP) = NL
             RSTACK(STKTOP) = LR
@@ -129,9 +128,9 @@ C
          K = LIST(I)
          VALUE = KEY(K)
 50       CONTINUE
-         IF (VALUE .LT. KEY(LIST(J-I))) THEN
+         IF (VALUE .LT. KEY(LIST(J-1))) THEN
             LIST(J) = LIST(J-1)
-            J = J - 1
+            J = J-1
             GOTO 50
          END IF
          LIST(J) = K

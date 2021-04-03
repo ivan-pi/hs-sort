@@ -10,7 +10,7 @@ C     'N'    POSITIVE INTEGER GIVING LENGTH OF LIST
 C     'LIST' A LIST OF LENGTH 'N' OF INTEGERS
 C     'KEY'  A LIST OF LENGTH 'N' OF DOUBLE PRECISION KEYS
 C
-C     OUTPUT PARAMETERS
+C     OUTPUT PARAMETERS:
 C
 C     'N'    UNCHANGED
 C     'LIST' A LIST OF OF LENGTH 'N' OF INTEGERS SORTED IN ASCENDING
@@ -24,7 +24,6 @@ C     ABOUT 12 (ALTHOUGH MAY BE SYSTEM DEPENDENT)
 C
 C     ROUTINE SORTS LISTS UP TO LENGTH 2**MAXSTK
 C***********************************************************************
-
       INTEGER N
       INTEGER LIST(*)
       DOUBLE PRECISION KEY(*)
@@ -42,7 +41,7 @@ C
       IF (LL .LT. LR) THEN
          NL = LL
          NR = LR
-         LM = (LL + LR)/2
+         LM = (LL+LR) / 2
          GUESS = KEY(LIST(LM))
 C
 C        FIND KEYS FOR EXCHANGE
@@ -80,7 +79,7 @@ C
 C
 C     SELECT SUB-LIST TO BE PROCESSED NEXT
 C
-         STKTOP = STKTOP - 1
+         STKTOP = STKTOP + 1
          IF (NR .LT. LM) THEN
             LSTACK(STKTOP) = NL
             RSTACK(STKTOP) = LR
