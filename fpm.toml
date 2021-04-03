@@ -1,0 +1,10 @@
+name = "hs-sort"
+version = "0.1.0"
+author = ["G. T. Houlsby", "S. W. Sloan"]
+maintainer = "Ivan Pribec <ivan.pribec@gmail.com>"
+description "Efficient sorting routines in FORTRAN 77"
+categories = []
+keywords = ["quick","insertion",""]
+
+[library]
+source-dir = "src"
