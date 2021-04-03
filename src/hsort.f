@@ -114,7 +114,7 @@ C
       VALUE = KEY(K)
       DO 40 I = 2, MIN(N,NCUT)
          IF (KEY(LIST(I)) .LT. VALUE) THEN
-            J = 1
+            J = I
             VALUE = KEY(LIST(I))
          END IF
 40    CONTINUE

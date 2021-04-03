@@ -52,7 +52,7 @@ C
 20       CONTINUE
          IF (VALUE .LT. KEY(LIST(J-1))) THEN
             LIST(J) = LIST(J-1)
-            J = J - 1
+            J = J-1
             GOTO 20
          END IF
          LIST(J) = K
