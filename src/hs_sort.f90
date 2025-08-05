@@ -1,85 +1,80 @@
 module hs_sort
 
-  implicit none
+   implicit none
 
-  integer, parameter, public :: dp = kind(1.0d0)
-  private
-  public :: hsort, isort, qsort
-  public :: is_sorted
+   integer, parameter, public :: dp = kind(1.0d0)
+   private
+   public :: hsort, isort, qsort
+   public :: is_sorted
+   public :: ASCENDING, DESCENDING
 
-  interface isort 
-      module procedure isort
-    end interface isort
-  interface qsort
-      module procedure qsort
-    end interface qsort
-  interface hsort
-      module procedure hsort
-    end interface hsort
+   enum, bind(C)
+      enumerator :: ASCENDING = 1
+      enumerator :: DESCENDING = 2
+   end enum
 
-
-
-contains 
+contains
    subroutine isort(list, key)
-    integer, intent(inout) :: list(:)
-    real(dp), intent(in) :: key(:)
+      integer, intent(inout) :: list(:)
+      real(dp), intent(in) :: key(:)
 
-    if( .not. is_sorted(list)) error stop "List is not sorted!"
-    call isort_pure(list, key)
-    end subroutine isort
-    subroutine qsort(list, key)
-    integer, intent(inout) :: list(:)
-    real(dp), intent(in) :: key(:)
+      if (.not. is_sorted(list)) error stop "List is not sorted!"
+      call isort_pure(list, key)
+   end subroutine isort
+   subroutine qsort(list, key)
+      integer, intent(inout) :: list(:)
+      real(dp), intent(in) :: key(:)
 
-    if( .not. is_sorted(list)) error stop "List is not sorted!"
-    call qsort_pure(list, key)
-    end subroutine qsort
+      if (.not. is_sorted(list)) error stop "List is not sorted!"
+      call qsort_pure(list, key)
+   end subroutine qsort
 
-    subroutine hsort(list, key)
-    integer, intent(inout) :: list(:)
-    real(dp), intent(in) :: key(:)
-    if( .not. is_sorted(list)) error stop "List is not sorted!"
-    call hsort_pure(list, key)
-    end subroutine hsort
+   subroutine hsort(list, key)
+      integer, intent(inout) :: list(:)
+      real(dp), intent(in) :: key(:)
+      if (.not. is_sorted(list)) error stop "List is not sorted!"
+      call hsort_pure(list, key)
+   end subroutine hsort
 
-   pure function is_sorted(array, reverse) result(sorted)
+   pure function is_sorted(array, order) result(sorted)
+      implicit none
+
       integer, intent(in) :: array(:)
-      logical, intent(in), optional :: reverse
-      logical :: is_reverse
+      integer, intent(in), optional :: order
       logical :: sorted
+      integer :: sort_order
+      integer :: i
 
       sorted = .true.
-      is_reverse = .false.
+      sort_order = ASCENDING  ! default to ascending
 
-      if (present(reverse)) then
-         is_reverse = reverse
+      if (present(order)) then
+         sort_order = order
       end if
 
-      block
-         integer :: i
-         if (is_reverse) then
+      select case (sort_order)
+      case (DESCENDING)
          do i = 1, size(array) - 1
             if (array(i + 1) > array(i)) then
                sorted = .false.
                return
             end if
          end do
-         else
+      case default  ! ASCENDING or any other value
          do i = 1, size(array) - 1
             if (array(i + 1) < array(i)) then
                sorted = .false.
                return
             end if
          end do
-         end if
-      end block
+      end select
 
    end function is_sorted
 
-pure subroutine hsort_pure(list, key)
+   pure subroutine hsort_pure(list, key)
 !     ORDER INTEGERS STORES IN 'LIST' IN ASCENDING SEQUENCE OF THEIR KEY
 !     VALUES STORED IN KEY
-!     
+!
 !     list - array of integers to be sorted
 !     key  - array of real numbers used as keys for sorting
 !
@@ -91,160 +86,160 @@ pure subroutine hsort_pure(list, key)
 !     EFFICIENCY, BUT MAY BE SYSTEM DEPENDENT.
 !
 !     ROUTINE SORTS LISTS UP TO LENGTH 2**MAXSTK
-  implicit none
-  integer, intent(inout) :: list(:)
-  real(dp), intent(in) :: key(:)
+      implicit none
+      integer, intent(inout) :: list(:)
+      real(dp), intent(in) :: key(:)
 
-  integer, parameter :: maxstk = 32, ncut = 12
-  integer :: ll, lr, lm, nl, nr, ltemp, stktop, i, j, k
-  integer :: lstack(maxstk), rstack(maxstk)
-  real(dp) :: guess, value
-  logical :: quicksort_done
-  integer :: n 
-  n = size(list, 1)
-  ll = 1
-  lr = n
-  stktop = 0
+      integer, parameter :: maxstk = 32, ncut = 12
+      integer :: ll, lr, lm, nl, nr, ltemp, stktop, i, j, k
+      integer :: lstack(maxstk), rstack(maxstk)
+      real(dp) :: guess, value
+      logical :: quicksort_done
+      integer :: n
+      n = size(list, 1)
+      ll = 1
+      lr = n
+      stktop = 0
 
-  quicksort_done = .false.
+      quicksort_done = .false.
 
-  do while (.not. quicksort_done)
+      do while (.not. quicksort_done)
 
-    if ((lr - ll) >= ncut) then
-       nl = ll
-       nr = lr
-       lm = (ll + lr) / 2
-       guess = key(list(lm))
+         if ((lr - ll) >= ncut) then
+            nl = ll
+            nr = lr
+            lm = (ll + lr)/2
+            guess = key(list(lm))
 
-       do
-          do while (key(list(nl)) < guess)
-             nl = nl + 1
-          end do
+            do
+               do while (key(list(nl)) < guess)
+                  nl = nl + 1
+               end do
 
-          do while (guess < key(list(nr)))
-             nr = nr - 1
-          end do
+               do while (guess < key(list(nr)))
+                  nr = nr - 1
+               end do
 
-          if (nl < (nr - 1)) then
-             ltemp = list(nl)
-             list(nl) = list(nr)
-             list(nr) = ltemp
-             nl = nl + 1
-             nr = nr - 1
-          else
-             exit
-          end if
-       end do
+               if (nl < (nr - 1)) then
+                  ltemp = list(nl)
+                  list(nl) = list(nr)
+                  list(nr) = ltemp
+                  nl = nl + 1
+                  nr = nr - 1
+               else
+                  exit
+               end if
+            end do
 
-       if (nl <= nr) then
-          if (nl < nr) then
-             ltemp = list(nl)
-             list(nl) = list(nr)
-             list(nr) = ltemp
-          end if
-          nl = nl + 1
-          nr = nr - 1
-       end if
+            if (nl <= nr) then
+               if (nl < nr) then
+                  ltemp = list(nl)
+                  list(nl) = list(nr)
+                  list(nr) = ltemp
+               end if
+               nl = nl + 1
+               nr = nr - 1
+            end if
 
-       stktop = stktop + 1
-       if (nr < lm) then
-          lstack(stktop) = nl
-          rstack(stktop) = lr
-          lr = nr
-       else
-          lstack(stktop) = ll
-          rstack(stktop) = nr
-          ll = nl
-       end if
+            stktop = stktop + 1
+            if (nr < lm) then
+               lstack(stktop) = nl
+               rstack(stktop) = lr
+               lr = nr
+            else
+               lstack(stktop) = ll
+               rstack(stktop) = nr
+               ll = nl
+            end if
 
-    else if (stktop /= 0) then
-       ll = lstack(stktop)
-       lr = rstack(stktop)
-       stktop = stktop - 1
+         else if (stktop /= 0) then
+            ll = lstack(stktop)
+            lr = rstack(stktop)
+            stktop = stktop - 1
 
-    else
-       quicksort_done = .true.
-    end if
+         else
+            quicksort_done = .true.
+         end if
 
-  end do
+      end do
 
-  ! Second pass: Insertion sort for final ordering
+      ! Second pass: Insertion sort for final ordering
 
-  j = 1
-  k = list(1)
-  value = key(k)
-  do i = 2, min(n, ncut)
-     if (key(list(i)) < value) then
-        j = i
-        value = key(list(i))
-     end if
-  end do
-  list(1) = list(j)
-  list(j) = k
+      j = 1
+      k = list(1)
+      value = key(k)
+      do i = 2, min(n, ncut)
+         if (key(list(i)) < value) then
+            j = i
+            value = key(list(i))
+         end if
+      end do
+      list(1) = list(j)
+      list(j) = k
 
-  do i = 2, n
-     j = i
-     k = list(i)
-     value = key(k)
-     do while (j > 1 .and. value < key(list(j-1)))
-        list(j) = list(j-1)
-        j = j - 1
-     end do
-     list(j) = k
-  end do
+      do i = 2, n
+         j = i
+         k = list(i)
+         value = key(k)
+         do while (j > 1 .and. value < key(list(j - 1)))
+            list(j) = list(j - 1)
+            j = j - 1
+         end do
+         list(j) = k
+      end do
 
-end subroutine hsort_pure
+   end subroutine hsort_pure
 
-pure subroutine isort_pure(list, key)
+   pure subroutine isort_pure(list, key)
 !     ORDER INTEGERS STORES IN 'LIST' IN ASCENDING SEQUENCE OF THEIR KEY
 !     VALUES STORED IN KEY
-!     
+!
 !     list - array of integers to be sorted
 !     key  - array of real numbers used as keys for sorting
 !
 !     NOTES:
 !     USES INSERTION SORT - EFFICIENT ONLY FOR 'N' VALUES LESS THAN
 !     ABOUT 12 (ALTHOUGH MAY BE SYSTEM DEPENDENT)
-  implicit none
-  integer, intent(inout) :: list(:)
-  real(dp), intent(in) :: key(:)
+      implicit none
+      integer, intent(inout) :: list(:)
+      real(dp), intent(in) :: key(:)
 
-  integer :: n
-  integer :: i, j, k
-  real(dp) :: value
+      integer :: n
+      integer :: i, j, k
+      real(dp) :: value
 
-  ! Find the index with the minimum key and move it to the front
-  n = size(list, 1)
-  j = 1
-  k = list(1)
-  value = key(k)
-  do i = 2, n
-     if (key(list(i)) < value) then
-        j = i
-        value = key(list(i))
-     end if
-  end do
-  list(1) = list(j)
-  list(j) = k
+      ! Find the index with the minimum key and move it to the front
+      n = size(list, 1)
+      j = 1
+      k = list(1)
+      value = key(k)
+      do i = 2, n
+         if (key(list(i)) < value) then
+            j = i
+            value = key(list(i))
+         end if
+      end do
+      list(1) = list(j)
+      list(j) = k
 
-  ! Insertion sort
-  do i = 2, n
-     j = i
-     k = list(i)
-     value = key(k)
-     do while (j > 1 .and. value < key(list(j-1)))
-        list(j) = list(j-1)
-        j = j - 1
-     end do
-     list(j) = k
-  end do
+      ! Insertion sort
+      do i = 2, n
+         j = i
+         k = list(i)
+         value = key(k)
+         do while (j > 1 .and. value < key(list(j - 1)))
+            list(j) = list(j - 1)
+            j = j - 1
+         end do
+         list(j) = k
+      end do
 
-end subroutine isort_pure
+   end subroutine isort_pure
 
-subroutine qsort_pure(list, key)
+   subroutine qsort_pure(list, key)
 !     ORDER INTEGERS STORES IN 'LIST' IN ASCENDING SEQUENCE OF THEIR KEY
 !     VALUES STORED IN KEY
-!     
+!
 !     list - array of integers to be sorted
 !     key  - array of real numbers used as keys for sorting
 !
@@ -252,83 +247,80 @@ subroutine qsort_pure(list, key)
 !     ABOUT 12 (ALTHOUGH MAY BE SYSTEM DEPENDENT)
 !
 !     ROUTINE SORTS LISTS UP TO LENGTH 2**MAXSTK
-  implicit none
-  integer, intent(inout) :: list(:)
-  real(dp), intent(in) :: key(:)
+      implicit none
+      integer, intent(inout) :: list(:)
+      real(dp), intent(in) :: key(:)
 
-  integer, parameter :: maxstk = 32
-  integer :: ll, lr, lm, nl, nr, ltemp, stktop
-  integer :: lstack(maxstk), rstack(maxstk)
-  real(dp) :: guess
-  logical :: done
+      integer, parameter :: maxstk = 32
+      integer :: ll, lr, lm, nl, nr, ltemp, stktop
+      integer :: lstack(maxstk), rstack(maxstk)
+      real(dp) :: guess
+      logical :: done
 
-  ll = 1
-  lr = size(list, 1)
-  stktop = 0
-  done = .false.
+      ll = 1
+      lr = size(list, 1)
+      stktop = 0
+      done = .false.
 
-  do while (.not. done)
-     if (ll < lr) then
-        nl = ll
-        nr = lr
-        lm = (ll + lr) / 2
-        guess = key(list(lm))
+      do while (.not. done)
+         if (ll < lr) then
+            nl = ll
+            nr = lr
+            lm = (ll + lr)/2
+            guess = key(list(lm))
 
-        ! Partition the array
-        do
-           do while (key(list(nl)) < guess)
-              nl = nl + 1
-           end do
+            ! Partition the array
+            do
+               do while (key(list(nl)) < guess)
+                  nl = nl + 1
+               end do
 
-           do while (guess < key(list(nr)))
-              nr = nr - 1
-           end do
+               do while (guess < key(list(nr)))
+                  nr = nr - 1
+               end do
 
-           if (nl < (nr - 1)) then
-              ltemp = list(nl)
-              list(nl) = list(nr)
-              list(nr) = ltemp
-              nl = nl + 1
-              nr = nr - 1
-           else
-              exit
-           end if
-        end do
+               if (nl < (nr - 1)) then
+                  ltemp = list(nl)
+                  list(nl) = list(nr)
+                  list(nr) = ltemp
+                  nl = nl + 1
+                  nr = nr - 1
+               else
+                  exit
+               end if
+            end do
 
-        if (nl <= nr) then
-           if (nl < nr) then
-              ltemp = list(nl)
-              list(nl) = list(nr)
-              list(nr) = ltemp
-           end if
-           nl = nl + 1
-           nr = nr - 1
-        end if
+            if (nl <= nr) then
+               if (nl < nr) then
+                  ltemp = list(nl)
+                  list(nl) = list(nr)
+                  list(nr) = ltemp
+               end if
+               nl = nl + 1
+               nr = nr - 1
+            end if
 
-        ! Push the larger sub-list to the stack and continue with the smaller
-        stktop = stktop + 1
-        if (nr < lm) then
-           lstack(stktop) = nl
-           rstack(stktop) = lr
-           lr = nr
-        else
-           lstack(stktop) = ll
-           rstack(stktop) = nr
-           ll = nl
-        end if
+            ! Push the larger sub-list to the stack and continue with the smaller
+            stktop = stktop + 1
+            if (nr < lm) then
+               lstack(stktop) = nl
+               rstack(stktop) = lr
+               lr = nr
+            else
+               lstack(stktop) = ll
+               rstack(stktop) = nr
+               ll = nl
+            end if
 
-     else if (stktop > 0) then
-        ll = lstack(stktop)
-        lr = rstack(stktop)
-        stktop = stktop - 1
-     else
-        done = .true.
-     end if
-  end do
+         else if (stktop > 0) then
+            ll = lstack(stktop)
+            lr = rstack(stktop)
+            stktop = stktop - 1
+         else
+            done = .true.
+         end if
+      end do
 
-end subroutine qsort_pure
-
-
-
+   end subroutine qsort_pure
 
 end module hs_sort
